@@ -9,6 +9,17 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
+
+
+def paginate_questions(request, selection):
+  page=request.args.get('page', 1, type=int)
+  start = (page-1)*QUESTIONS_PER_PAGE
+  end = start+QUESTIONS_PER_PAGE
+  
+  questions = [question.format() for question in selection]
+  current_questions = questions[start:end]
+  return current_questions
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -18,28 +29,56 @@ def create_app(test_config=None):
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
 
-    cors = CORS(app)
+    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     '''
   @TODO: Use the after_request decorator to set Access-Control-Allow
   '''
+    #adds some headers to the response
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Headers',
-                             'Conetent-Type', 'Authorization')
-
+      response.headers.add('Access-Control-Allow-Headers', 'Conetent-Type, Authorization, false')
+      # response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE, OPTIONS')
+      return response
+    
+    
+        
+    @app.route('/')
+    def get_home():
+      return jsonify({"Message": "Hello Shamu"})
+    
+    
+    
     '''
   @TODO: 
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
+    @app.route('/api/categories')
+    def get_categories():
+      def format_data(categories):
+        data = []
+        for category in categories:
+          data.append({
+          "id": category.id,
+          "type": category.type,
+          })
+        return data
+      categories = Category.query.order_by(Category.id).all()
+      
+      data = format_data(categories)
+      
+      return jsonify({"results": data})
+    
+    
 
     '''
   @TODO: 
   Create an endpoint to handle GET requests for questions, 
   including pagination (every 10 questions). 
   This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
+  number of total questions, current category, categories.
+
 
   TEST: At this point, when you start the application
   you should see questions and categories generated,
@@ -47,6 +86,41 @@ def create_app(test_config=None):
   Clicking on the page numbers should update the questions. 
   '''
 
+    # @app.route('/questions')
+    # def get_question():
+    #   questions = Question.query.order_by(Question.id).all()
+    #   print("QUESTIONS", questions)
+    #   return jsonify({'message': "TEST"})
+    @app.route('/api/questions')
+    def retrieve_questions():
+      def format_categories(categories):
+        data = {}
+        for category in categories:
+          data[category.id] = category.type
+        print("FUN", data)   
+        return data
+      
+      
+      questions = Question.query.order_by(Question.id).all()
+      categories = Category.query.order_by(Category.id).all()
+     
+      current_questions = paginate_questions(request, questions)
+      
+      result = {
+        "questions": current_questions,
+        "totalQuestions": len(current_questions),
+        "categories": format_categories(categories),
+        "currentCategory": None
+      }
+      print("TESTME", result)
+      return jsonify({"data": result})
+    
+    
+    
+    
+    
+    
+  
     '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 

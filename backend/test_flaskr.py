@@ -1,10 +1,12 @@
 import os
 import unittest
 import json
+import math
 from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
 from models import setup_db, Question, Category
+
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -33,6 +35,33 @@ class TriviaTestCase(unittest.TestCase):
     TODO
     Write at least one test for each test for successful operation and for expected errors.
     """
+    def test_get_paginated_questions(self):
+        res = self.client().get("/api/questions")
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["data"]["success"], True)
+        self.assertTrue(data["data"]["total_questions"])
+        self.assertTrue(len(data["data"]["questions"]))
+        self.assertTrue(data["data"]['categories'])
+        self.assertFalse(data["data"]["current_category"])
+    
+    def test_404_sent_requesting_beyond_valid_page(self):
+        res = self.client().get("/api/questions?page=1000")
+        data = json.loads(res.data)
+        print("DATA", data['message'])
+        
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        
+    def test_pagination_is_ten(self):
+        res = self.client().get("/api/questions?page=1")
+        data = json.loads(res.data)
+        self.assertEqual(len(data['data']['questions']), 10)
+    
+        
+        
 
 
 # Make the tests conveniently executable

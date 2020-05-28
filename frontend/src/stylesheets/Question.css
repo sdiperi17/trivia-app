@@ -53,13 +53,14 @@
   margin-left: 0px !important;
 }
 
-span.page-num {
+.page-num {
   margin: 5px;
   padding-bottom: 50px;
   /* color: blue; */
   font-weight: bolder;
   text-decoration: underline;
   font-size: 16px;
+  height: 100px;
 }
 
 span.page-num.active {

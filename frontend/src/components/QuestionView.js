@@ -26,13 +26,14 @@ class QuestionView extends Component {
       url: `http://localhost:5000/api/questions?page=${this.state.page}`, //TODO: update request URL
       type: "GET",
       success: result => {
-        console.log("TESTAPI", result);
+        console.log("TESTAPI", result.data);
         this.setState({
           questions: result.data.questions,
           totalQuestions: result.data.total_questions,
           categories: result.data.categories,
           currentCategory: result.data.current_category
         });
+
         return;
       },
       error: error => {
@@ -49,6 +50,7 @@ class QuestionView extends Component {
   createPagination() {
     let pageNumbers = [];
     let maxPage = Math.ceil(this.state.totalQuestions / 10);
+
     for (let i = 1; i <= maxPage; i++) {
       pageNumbers.push(
         <span
@@ -62,6 +64,7 @@ class QuestionView extends Component {
         </span>
       );
     }
+    console.log("SPAN", pageNumbers);
     return pageNumbers;
   }
 
@@ -130,6 +133,8 @@ class QuestionView extends Component {
 
   render() {
     let { categories } = this.state;
+    this.state.totalQuestions && console.log(this.state);
+    console.log("STATE", this.state);
     return (
       <div className="question-view">
         <div className="categories-list">
@@ -162,20 +167,26 @@ class QuestionView extends Component {
           )}
           <Search submitSearch={this.submitSearch} />
         </div>
-        <div className="questions-list">
-          <h2>Questions</h2>
-          {this.state.questions.map((q, ind) => (
-            <Question
-              key={q.id}
-              question={q.question}
-              answer={q.answer}
-              category={this.state.categories[q.category]}
-              difficulty={q.difficulty}
-              questionAction={this.questionAction(q.id)}
-            />
-          ))}
-          <div className="pagination-menu">{this.createPagination()}</div>
-        </div>
+        {this.state.questions.length > 0 ? (
+          <div className="questions-list">
+            <h2>Questions</h2>
+            {this.state.questions.map((q, ind) => (
+              <Question
+                key={q.id}
+                question={q.question}
+                answer={q.answer}
+                category={this.state.categories[q.category]}
+                difficulty={q.difficulty}
+                questionAction={this.questionAction(q.id)}
+              />
+            ))}
+
+            <div className="pagination-menu">{this.createPagination()}</div>
+          </div>
+        ) : (
+          <h1>Loading</h1>
+        )}
+        <div className="pagination-menu">{this.createPagination()}</div>
       </div>
     );
   }

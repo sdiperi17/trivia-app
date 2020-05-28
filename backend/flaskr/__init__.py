@@ -40,9 +40,7 @@ def create_app(test_config=None):
       response.headers.add('Access-Control-Allow-Headers', 'Conetent-Type, Authorization, false')
       # response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE, OPTIONS')
       return response
-    
-    
-        
+       
     @app.route('/')
     def get_home():
       return jsonify({"Message": "Hello Shamu"})
@@ -101,26 +99,26 @@ def create_app(test_config=None):
         return data
       
       
-      questions = Question.query.order_by(Question.id).all()
+      questions_all = Question.query.order_by(Question.id).all()
       categories = Category.query.order_by(Category.id).all()
      
-      current_questions = paginate_questions(request, questions)
+      current_questions = paginate_questions(request, questions_all)
+  
+      if len(current_questions) == 0:
+       abort(404)   
       
       result = {
+        "success": True,
         "questions": current_questions,
-        "totalQuestions": len(current_questions),
+        "total_questions": len(questions_all),
         "categories": format_categories(categories),
-        "currentCategory": None
+        "current_category": None
       }
-      print("TESTME", result)
+      # print("TESTME", result)
       return jsonify({"data": result})
     
     
-    
-    
-    
-    
-  
+
     '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
@@ -177,5 +175,13 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  
+    @app.errorhandler(404)
+    def not_found(error):
+      return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+      }), 404
 
     return app

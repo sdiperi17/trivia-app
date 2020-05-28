@@ -127,6 +127,30 @@ def create_app(test_config=None):
   This removal will persist in the database and when you refresh the page. 
   '''
 
+  ##one_or_none .one_or_none(), returns None if there is no data in your database, or an instance of class. If there is exactly one data in your database it returns one, or raises an exception if there are multiple products named apple in your database.
+  
+    @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
+    def test(question_id):
+      try:
+        question = Question.query.filter(Question.id == question_id).one_or_none()
+      
+        if question is None:
+              abort(404)
+        
+        question.delete()
+        question_all=Question.query.order_by(Question.id).all()
+        current_questions=paginate_questions(request, question_all)
+        
+        return jsonify({
+          "success": True,
+          "deleted": question_id,
+          "questions": current_questions,
+          "total_questions": len(question_all)
+        })
+      except:
+        #422 Unprocessable Entity
+        abort(422)
+  
     '''
   @TODO: 
   Create an endpoint to POST a new question, 

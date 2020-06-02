@@ -117,9 +117,10 @@ class QuestionView extends Component {
     if (action === "DELETE") {
       if (window.confirm("are you sure you want to delete the question?")) {
         $.ajax({
-          url: `/questions/${id}`, //TODO: update request URL
+          url: `http://localhost:5000/api/questions/${id}`, //TODO: update request URL
           type: "DELETE",
           success: result => {
+            console.log("THIS FUNCTION RAN");
             this.getQuestions();
           },
           error: error => {
@@ -186,7 +187,6 @@ class QuestionView extends Component {
         ) : (
           <h1>Loading</h1>
         )}
-        <div className="pagination-menu">{this.createPagination()}</div>
       </div>
     );
   }

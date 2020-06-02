@@ -47,9 +47,9 @@ class TriviaTestCase(unittest.TestCase):
         self.assertFalse(data["data"]["current_category"])
     
     def test_404_sent_requesting_beyond_valid_page(self):
+        
         res = self.client().get("/api/questions?page=1000")
         data = json.loads(res.data)
-        print("DATA", data['message'])
         
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
@@ -60,7 +60,45 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         self.assertEqual(len(data['data']['questions']), 10)
     
+    def test_pagination_has_next_prev_page(self):
+        # Page!:
+        res_page1 = self.client().get("/api/questions?page=1")
+        data_page1 = json.loads(res_page1.data)
+        self.assertTrue(data_page1["data"]["has_next"], True)
+        self.assertFalse(data_page1["data"]["has_prev"], False)
         
+        
+        # Page2:
+        res_page2 = self.client().get("/api/questions?page=2")
+        data_page2 = json.loads(res_page2.data)
+        self.assertEqual(data_page2["data"]["page"], 2)
+        self.assertEqual(data_page2["data"]["prev_num"], 1)
+
+    
+    
+    ## IT CAN DELETE QUEATIONS
+    # def test_delete_questions(self):
+    #     res = self.client().delete('/api/questions/17')
+    #     data = json.loads(res.data)
+        
+    #     print("RES", res.data)
+    #     question = Question.query.filter(Question.id==17).one_or_none()
+        
+    #     self.assertEqual(res.status_code, 200)
+    #     self.assertEqual(data['success'], True)
+    #     self.assertEqual(data['deleted'], 17)
+    #     self.assertEqual(data["message"], "Question with 17 has been successfully deleted" )
+    #     self.assertTrue(data["total_questions"])
+        
+    def test_404_question_does_not_exist(self):
+        res = self.client().delete('/api/questions/9999')
+        data = json.loads(res.data)
+        print("TEST", data)
+        
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data["error"], 422)
+        self.assertEqual(data['message'], 'unprocessable')
         
 
 

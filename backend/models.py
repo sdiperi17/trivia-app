@@ -57,6 +57,13 @@ class Question(db.Model):
       'category': self.category,
       'difficulty': self.difficulty
     }
+    
+  def paginate_questions(self):
+    paginated_questions_dict={}
+    for property, value in vars(self).items():
+      # question_dict[property] =  value
+      print(property, ": ", value)
+    # return paginated_questions_dict
 
 '''
 Category

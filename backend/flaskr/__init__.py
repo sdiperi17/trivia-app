@@ -1,10 +1,13 @@
 import os
-from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 import random
+from crypt import methods
 
-from models import setup_db, Question, Category
+import werkzeug
+from flask import Flask, abort, flash, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+
+from flask_cors import CORS
+from models import Category, Question, db, setup_db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -23,6 +26,7 @@ def paginate_questions(request, selection):
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
+    app.secret_key = "super secret key"
     setup_db(app)
 
     '''
@@ -83,42 +87,56 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
-
-    # @app.route('/questions')
-    # def get_question():
-    #   questions = Question.query.order_by(Question.id).all()
-    #   print("QUESTIONS", questions)
-    #   return jsonify({'message': "TEST"})
+    
     @app.route('/api/questions')
-    def retrieve_questions():
+    def get_questions():
+      page = request.args.get('page', 1, int)
       def format_categories(categories):
         data = {}
         for category in categories:
           data[category.id] = category.type
-        print("FUN", data)   
         return data
       
+      def format_paginated_questions(selection):
+        question_dict={}
+        for key, value in vars(selection).items():
+          print("key", key)
+          question_dict[key] =  value
+        return question_dict
       
-      questions_all = Question.query.order_by(Question.id).all()
-      categories = Category.query.order_by(Category.id).all()
-     
-      current_questions = paginate_questions(request, questions_all)
-  
-      if len(current_questions) == 0:
-       abort(404)   
-      
-      result = {
-        "success": True,
-        "questions": current_questions,
-        "total_questions": len(questions_all),
-        "categories": format_categories(categories),
-        "current_category": None
-      }
-      # print("TESTME", result)
-      return jsonify({"data": result})
-    
-    
+      try:
+        questions_all = Question.query.order_by(Question.id).all()
+        questions_dict = Question.query.order_by(Question.id).paginate(page, per_page=QUESTIONS_PER_PAGE, error_out=False)
 
+        if len(questions_dict.items) is 0:
+          abort(404)
+ 
+        categories = Category.query.order_by(Category.id).all()
+        current_questions = format_paginated_questions(questions_dict)
+        questions = [question.format() for question in current_questions["items"]]
+      
+        print("TEST", current_questions["page"])
+        result = {
+        "success": True,
+        "per_page": current_questions["per_page"],
+        "page": current_questions["page"],
+        "questions": questions,
+        "total_questions": current_questions["total"],
+        "categories": format_categories(categories),
+        "current_category": None,
+        "next_num": questions_dict.next_num,
+        "prev_num": questions_dict.prev_num,
+        "has_next": questions_dict.has_next,
+        "has_prev": questions_dict.has_prev,
+        }
+        return jsonify({"data": result})
+    
+    
+      except:
+        flash("No questions found on the record")
+        abort(404)
+         
+      
     '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
@@ -130,23 +148,24 @@ def create_app(test_config=None):
   ##one_or_none .one_or_none(), returns None if there is no data in your database, or an instance of class. If there is exactly one data in your database it returns one, or raises an exception if there are multiple products named apple in your database.
   
     @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
-    def test(question_id):
+    def delete_question(question_id):
+      print("ID", question_id)
       try:
-        question = Question.query.filter(Question.id == question_id).one_or_none()
-      
-        if question is None:
-              abort(404)
-        
+        question = Question.query.filter_by(id = question_id).one_or_none()
         question.delete()
+        
+        if question is None:  
+          abort(404)
+          
         question_all=Question.query.order_by(Question.id).all()
-        current_questions=paginate_questions(request, question_all)
         
         return jsonify({
           "success": True,
           "deleted": question_id,
-          "questions": current_questions,
-          "total_questions": len(question_all)
+          "total_questions": len(question_all),
+          "message":  f"Question with {question_id} has been successfully deleted"
         })
+            
       except:
         #422 Unprocessable Entity
         abort(422)
@@ -161,6 +180,12 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+  
+  
+    @app.route("/api/questions", methods = ["POST"])
+    def create_trivia_question():
+      print("REQUEST", request.data)
+      return jsonify({"message": "SHAMUE"})
 
     '''
   @TODO: 
@@ -208,4 +233,21 @@ def create_app(test_config=None):
         "message": "resource not found"
       }), 404
 
+    @app.errorhandler(400)
+    def bad_request(error):
+      return jsonify({
+        "success": False, 
+        "error": 400,
+        "message": "bad request"
+      }), 400
+      
+      
+    @app.errorhandler(422)
+    def unprocessable(error):
+      return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "unprocessable"
+      }), 422
+      
     return app

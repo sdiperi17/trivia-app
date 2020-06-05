@@ -22,11 +22,11 @@ class QuizView extends Component {
 
   componentDidMount() {
     $.ajax({
-      url: `/categories`, //TODO: update request URL
+      url: "/api/categories", //TODO: update request URL
       type: "GET",
       success: result => {
-        console.log("TEST API", result);
-        this.setState({ categories: result.categories });
+        console.log("TEST API", result.results);
+        this.setState({ categories: result.results });
         return;
       },
       error: error => {
@@ -51,7 +51,7 @@ class QuizView extends Component {
     }
 
     $.ajax({
-      url: "/quizzes", //TODO: update request URL
+      url: "http://localhost:5000/api/quizzes", //TODO: update request URL
       type: "POST",
       dataType: "json",
       contentType: "application/json",
@@ -59,11 +59,9 @@ class QuizView extends Component {
         previous_questions: previousQuestions,
         quiz_category: this.state.quizCategory
       }),
-      xhrFields: {
-        withCredentials: true
-      },
       crossDomain: true,
       success: result => {
+        console.log("RESULT", result);
         this.setState({
           showAnswer: false,
           previousQuestions: previousQuestions,
@@ -153,6 +151,7 @@ class QuizView extends Component {
     const answerArray = this.state.currentQuestion.answer
       .toLowerCase()
       .split(" ");
+    let test = answerArray.includes(formatGuess);
     return answerArray.includes(formatGuess);
   };
 

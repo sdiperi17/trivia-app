@@ -58,12 +58,6 @@ class Question(db.Model):
       'difficulty': self.difficulty
     }
     
-  def paginate_questions(self):
-    paginated_questions_dict={}
-    for property, value in vars(self).items():
-      # question_dict[property] =  value
-      print(property, ": ", value)
-    # return paginated_questions_dict
 
 '''
 Category
@@ -83,3 +77,9 @@ class Category(db.Model):
       'id': self.id,
       'type': self.type
     }
+    
+  def format_to_dict(self, categories):
+    data = {}
+    for category in categories:
+        data[category.id] = category.type
+    return data

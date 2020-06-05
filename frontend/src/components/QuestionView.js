@@ -70,7 +70,7 @@ class QuestionView extends Component {
 
   getByCategory = id => {
     $.ajax({
-      url: `http://localhost:5000/categories/${id}/questions`, //TODO: update request URL
+      url: `http://localhost:5000/api/categories/${id}/questions`, //TODO: update request URL
       type: "GET",
       success: result => {
         this.setState({
@@ -89,14 +89,11 @@ class QuestionView extends Component {
 
   submitSearch = searchTerm => {
     $.ajax({
-      url: `http://localhost:5000/questions`, //TODO: update request URL
+      url: `http://localhost:5000/api/questions/searchQuestions`, //TODO: update request URL
       type: "POST",
       dataType: "json",
       contentType: "application/json",
       data: JSON.stringify({ searchTerm: searchTerm }),
-      xhrFields: {
-        withCredentials: true
-      },
       crossDomain: true,
       success: result => {
         this.setState({
